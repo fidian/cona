@@ -153,7 +153,7 @@ export class Cona extends HTMLElement {
         let valueString = currentValue;
 
         if (s.endsWith("=")) {
-          if (/(p:|on|ref).*$/.test(s)) {
+          if (/\s(p:.+|on.+|ref)=$/.test(s)) {
             valueString = conaKey++;
             Cona._c[valueString] =
               typeof currentValue === "function"
