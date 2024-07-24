@@ -17,7 +17,6 @@ export class Cona extends HTMLElement {
   private props: Props;
   private _ef: Map<EffectFunction, EffectCallback>;
   private _ev: Map<EffectFunction, any>;
-  private _sr?: ShadowRoot | null = undefined;
   private _t?: number | null = undefined;
 
   /* LifecycleMethods */
@@ -32,7 +31,6 @@ export class Cona extends HTMLElement {
   public onMounted?(): void;
   public onUnmounted?(): void;
 
-  static style = "";
   static _c: { [key: string]: any } = {};
 
   constructor() {
@@ -54,14 +52,10 @@ export class Cona extends HTMLElement {
       e.g: () => this.state.count : 100
     */
     this._ev = new Map();
-
-    this.attachShadow({ mode: "open" });
   }
 
   connectedCallback() {
-    this._sr = this.shadowRoot;
-
-    this._getAttributes((this._sr?.host.attributes as NamedNodeMap) || []);
+    this._getAttributes(this.attributes);
     this.setup?.();
     this._update();
     this.onMounted?.();
@@ -84,9 +78,7 @@ export class Cona extends HTMLElement {
       renderString || "",
       "text/html",
     );
-    const styleElement = document.createElement("style");
-    styleElement.innerHTML = Cona.style;
-    this._pathDomDiffing(this._sr!, body, styleElement);
+    this._pathDomDiffing(this, body);
     this._event();
     this.onUpdated?.();
 
@@ -107,10 +99,9 @@ export class Cona extends HTMLElement {
    * @param next - The next DOM node.
    * @param styleNode - Optional style node to be inserted at the beginning of the next node's child nodes.
    */
-  private _pathDomDiffing(current: Node, next: Node, styleNode?: Node) {
+  private _pathDomDiffing(current: Node, next: Node) {
     const cNodes = this._nodeMap(current.childNodes);
     const nNodes = this._nodeMap(next.childNodes);
-    if (styleNode) nNodes.unshift(styleNode);
     let gap = cNodes.length - nNodes.length;
     if (gap > 0) for (; gap > 0; gap--) current.lastChild!.remove();
     for (const [i] of nNodes.entries()) {
@@ -153,13 +144,15 @@ export class Cona extends HTMLElement {
         let valueString = currentValue;
 
         if (s.endsWith("=")) {
-          if (/\s(p:.+|on.+|ref)=$/.test(s)) {
+          if (/\s(p:\S+|on\S+|ref)=$/.test(s)) {
             valueString = conaKey++;
             Cona._c[valueString] =
               typeof currentValue === "function"
                 ? currentValue.bind(this)
                 : currentValue;
-          } else valueString = JSON.stringify(currentValue);
+          } else {
+              valueString = JSON.stringify(currentValue);
+          }
         } else if (Array.isArray(currentValue)) {
           valueString = currentValue.join("");
         }
@@ -174,8 +167,7 @@ export class Cona extends HTMLElement {
    * @private
    */
   private _event() {
-    if (!this._sr) return;
-    for (const node of this._sr.querySelectorAll("*")) {
+    for (const node of this.querySelectorAll("*")) {
       for (const { name, value } of this._nodeMap(node.attributes)) {
         if (name.startsWith("on")) {
           (node as any)[name] = (e: Event) => Cona._c[value].call(this, e);
