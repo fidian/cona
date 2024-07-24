@@ -10,6 +10,8 @@ interface State {
   [key: string]: any;
 }
 
+let conaKey = 0;
+
 export class Cona extends HTMLElement {
   private _op: Props;
   private props: Props;
@@ -152,14 +154,11 @@ export class Cona extends HTMLElement {
 
         if (s.endsWith("=")) {
           if (/(p:|on|ref).*$/.test(s)) {
-            const key = Math.random().toString(36);
-
-            Cona._c[key] =
+            valueString = conaKey++;
+            Cona._c[valueString] =
               typeof currentValue === "function"
                 ? currentValue.bind(this)
                 : currentValue;
-
-            valueString = key;
           } else valueString = JSON.stringify(currentValue);
         } else if (Array.isArray(currentValue)) {
           valueString = currentValue.join("");
