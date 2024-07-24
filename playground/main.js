@@ -3,86 +3,6 @@ import { Cona } from "../dist/index.mjs";
 // Expose Cona for debugging.
 window.Cona = Cona;
 
-Cona.style = `
-  * {
-    box-sizing: border-box;
-    margin: 0;
-    padding: 0;
-    font-family: system-ui, sans-serif;
-  }
-
-  h1 {
-    margin-bottom: 20px;
-  }
-
-  input {
-    width: 100%;
-    margin-bottom: 20px;
-    border-radius: 0;
-    outline: none;
-    padding: 8px;
-    border: 1px solid black;
-  }
-
-  button {
-    cursor: pointer;
-    border: none;
-    padding: 8px;
-  }
-
-  .selected {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: PaleTurquoise;
-    align-items: center;
-    overflow: auto;
-    padding: 16px;
-  }
-
-  .selected-title {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 20px;
-  }
-
-  .selected-close {
-    background: black;
-    color: white;
-  }
-
-  .selected .images, .albums {
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
-  }
-
-  .selected .image-item {
-    display: flex;
-    gap: 16px;
-    align-items: center;
-  }
-
-  .selected .image-item img {
-    height: 48px;
-    width: 48px;
-  }
-
-  .album-item {
-    display: flex;
-    gap: 16px;
-    align-items: center;
-  }
-
-  .album-item button {
-    background: PaleTurquoise;
-    color: blue;
-  }
-`;
-
 class SelectedAlbum extends Cona {
   render(h) {
     return h`
@@ -131,7 +51,7 @@ class AlbumList extends Cona {
     this.h1Ref = this.ref();
     this.effect(
       () => this.state.search,
-      (oldValue, newValue) => console.log(oldValue, newValue),
+      (oldValue, newValue) => console.log(`Search changed from "${oldValue}" to "${newValue}"`),
     );
 
     this.watch(
@@ -150,13 +70,13 @@ class AlbumList extends Cona {
   }
 
   async onMounted() {
-    const response = await fetch("https://jsonplaceholder.typicode.com/albums");
+    const response = await fetch("albums.json");
     this.state.albums = (await response.json()) || [];
     this.state.isFetched = true;
   }
 
   onUpdated() {
-    console.log("H1 Ref", this.h1Ref?.current);
+    console.log("onUpdated, h1Ref is", this.h1Ref?.current);
   }
 
   async viewAlbum(id) {
@@ -173,6 +93,7 @@ class AlbumList extends Cona {
   }
 
   searchValue(e) {
+    console.log('searchValue', e.target.value);
     this.state.search = e.target.value;
   }
 
@@ -185,7 +106,7 @@ class AlbumList extends Cona {
       <div>
         <h1 ref=${this.h1Ref}>Albums</h1>
         <input
-          placeholder="Search album"
+          placeholder="Search albums"
           value=${this.state.search}
           oninput=${this.searchValue}
         />
